@@ -1,0 +1,10 @@
+{
+    "$schema": "https://schema.railpack.com",
+    "deploy": {
+        "startCommand": "hypercorn fats.main:app --bind 0.0.0.0:8000"
+    },
+    "packages": {
+        "aqua:docker/cli": "latest",
+        "aqua:docker/buildx": "latest"
+    }
+}
