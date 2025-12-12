@@ -48,11 +48,11 @@ jobs:
 
             - name: Install railpack
               run: |
-                  curl -fsSL https://get.railpack.com/install.sh | sh
+                  curl -fsSL https://railpack.com/install.sh | sh
                   echo "$HOME/.railpack/bin" >> $GITHUB_PATH
 
             - name: Build with railpack
-              run: railpack build
+              run: railpack build .
 
             - name: Tag and push image to GHCR
               run: |
