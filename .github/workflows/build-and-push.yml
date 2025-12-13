@@ -72,15 +72,18 @@ jobs:
                   docker tag fats:amd64-working "${IMAGE_ID}:amd64-working"
                   docker tag fats:arm64-working "${IMAGE_ID}:arm64-working"
 
-                  # push and get digest
-                  AMD_DIGEST=$(docker push "${IMAGE_ID}:amd64-working")
-                  ARM_DIGEST=$(docker push "${IMAGE_ID}:arm64-working")
-                  AMD_DIGEST=$(echo "$AMD_DIGEST" | grep "digest:" | awk '{print $2}')
-                  ARM_DIGEST=$(echo "$ARM_DIGEST" | grep "digest:" | awk '{print $2}')
+                  # Push and get digests
+                  docker push "${IMAGE_ID}:amd64-working" | tee /tmp/amd64-push.log
+                  docker push "${IMAGE_ID}:arm64-working" | tee /tmp/arm64-push.log
 
-                  # Tag and push each metadata tag
+                  AMD_DIGEST=$(grep -oP 'digest: \K[^ ]+' /tmp/amd64-push.log | tail -n1)
+                  ARM_DIGEST=$(grep -oP 'digest: \K[^ ]+' /tmp/arm64-push.log | tail -n1)
+
+                  # Create and push manifests for each metadata tag
                   echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
-                    docker manifest create "${IMAGE_ID}:${tag}" \
+                    TAG_NAME=$(echo "$tag" | sed "s|${IMAGE_ID}:||")
+                    docker manifest create "${IMAGE_ID}:${TAG_NAME}" \
                       --amend "${IMAGE_ID}@${AMD_DIGEST}" \
                       --amend "${IMAGE_ID}@${ARM_DIGEST}"
+                    docker manifest push "${IMAGE_ID}:${TAG_NAME}"
                   done
