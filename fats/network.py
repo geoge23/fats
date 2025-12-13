@@ -4,6 +4,7 @@ from .utils import run, log
 
 _does_network_exist_cache = False
 
+
 async def create_or_get_fats_network() -> str:
     """Creates the FATS Docker network if it doesn't exist, or returns the existing one."""
     network_name = "fats_network"
@@ -11,8 +12,17 @@ async def create_or_get_fats_network() -> str:
     if _does_network_exist_cache:
         return network_name
     # Check if the network already exists
-    proc = await run("docker", "network", "ls", "--filter", f"name={network_name}", "--format", "{{.Name}}")
+    proc = await run(
+        "docker",
+        "network",
+        "ls",
+        "--filter",
+        f"name={network_name}",
+        "--format",
+        "{{.Name}}",
+    )
     await proc.wait()
+    assert proc.stdout is not None, "Failed to get stdout from docker network ls"
     output = (await proc.stdout.read()).decode().strip()
 
     if network_name in output.splitlines():
@@ -26,13 +36,15 @@ async def create_or_get_fats_network() -> str:
     log(f"Created FATS network '{network_name}'.")
     return network_name
 
+
 def determine_self_container_id() -> str:
     # Let's see if our hostname looks like a container ID
     hostname = gethostname()
     if len(hostname) == 12 and re.match(r"^[0-9a-f]+$", hostname):
         return hostname
-    
+
     raise RuntimeError("Unable to determine self container ID from hostname.")
+
 
 async def connect_self_to_network():
     """Connects the current container to the FATS network."""

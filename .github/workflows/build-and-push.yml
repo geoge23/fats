@@ -55,19 +55,32 @@ jobs:
 
             - name: Build with railpack
               run: |
+                  set -e
                   export BUILDKIT_HOST=docker-container://buildkit
-                  railpack build .
+                  railpack build . --platform linux/amd64 --name fats:amd64-working &
+                  pid1=$!
+                  railpack build . --platform linux/arm64 --name fats:arm64-working &
+                  pid2=$!
+                  wait "$pid1"
+                  wait "$pid2"
 
             - name: Tag and push image to GHCR
               run: |
                   IMAGE_ID="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
                   IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-                  # Get the railpack built image
-                  RAILPACK_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "^fats:" | head -n 1)
+                  docker tag fats:amd64-working "${IMAGE_ID}:amd64-working"
+                  docker tag fats:arm64-working "${IMAGE_ID}:arm64-working"
+
+                  # push and get digest
+                  AMD_DIGEST=$(docker push "${IMAGE_ID}:amd64-working")
+                  ARM_DIGEST=$(docker push "${IMAGE_ID}:arm64-working")
+                  AMD_DIGEST=$(echo "$AMD_DIGEST" | grep "digest:" | awk '{print $2}')
+                  ARM_DIGEST=$(echo "$ARM_DIGEST" | grep "digest:" | awk '{print $2}')
 
                   # Tag and push each metadata tag
                   echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
-                    docker tag $RAILPACK_IMAGE $tag
-                    docker push $tag
+                    docker manifest create "${IMAGE_ID}:${tag}" \
+                      --amend "${IMAGE_ID}@${AMD_DIGEST}" \
+                      --amend "${IMAGE_ID}@${ARM_DIGEST}"
                   done
