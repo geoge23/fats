@@ -1,13 +1,15 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import Field
 from enum import Enum
+
+from fatstacks.utils.model import Model
 
 
 class LayoutStyle(str, Enum):
     LIST = "list"
 
 
-class LayoutHints(BaseModel):
+class LayoutHints(Model):
     """
     Layout hints provide optional guidance on how to render a surface's contents. They can suggest layout styles, themes, and other visual preferences to help rendering engines display the surface appropriately.
 

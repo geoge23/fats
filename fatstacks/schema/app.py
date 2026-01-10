@@ -1,13 +1,14 @@
 from typing import Optional
-from pydantic import BaseModel
 from enum import Enum
+
+from fatstacks.utils.model import Model
 
 
 class DesiredRuntimeCapability(str, Enum):
     AUTHENTICATION = "authentication"
 
 
-class App(BaseModel):
+class App(Model):
     """
     The top-level schema representing an application, containing metadata and a collection of surface ids.
     """

@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Type
-from pydantic import BaseModel
 from enum import Enum
+
+from fatstacks.utils.model import Model
 
 
 class DisplayStrategy(str, Enum):
@@ -14,14 +15,14 @@ ContentPrimitive = str | int | float | bool
 ContentTypes = Type["ContentAuto | ContentText | ContentImage | ContentAction"]
 
 
-class Content(BaseModel):
+class Content(Model):
     type: DisplayStrategy = DisplayStrategy.AUTO
     """The display strategy for the content, indicating how it should be rendered (e.g., 'text', 'image', etc.). Will be auto-detected if not provided."""
     pass
 
 
 class ContentAuto(Content):
-    type = DisplayStrategy.AUTO
+    type: DisplayStrategy = DisplayStrategy.AUTO
     """Content that will be auto-detected and displayed accordingly."""
     content: ContentPrimitive
     """The primitive content to be auto-displayed."""
@@ -34,27 +35,27 @@ class ContentTextSize(str, Enum):
 
 
 class ContentText(Content):
-    type = DisplayStrategy.TEXT
+    type: DisplayStrategy = DisplayStrategy.TEXT
     text: str
     size: Optional[ContentTextSize] = None
     """The text content to be displayed."""
 
 
 class ContentImage(Content):
-    type = DisplayStrategy.IMAGE
+    type: DisplayStrategy = DisplayStrategy.IMAGE
     url: str
     """The URL of the image to be displayed."""
 
 
 class ContentAction(Content):
-    type = DisplayStrategy.ACTION
+    type: DisplayStrategy = DisplayStrategy.ACTION
     action: str
     """The identifier of the action to be triggered."""
     data: Optional[Dict[str, ContentPrimitive]] = None
     """Allows overriding the Item data when this action is triggered, instead passing the data defined here."""
 
 
-class Item(BaseModel):
+class Item(Model):
     """
     An item represents a discrete piece of content within a surface.
     """

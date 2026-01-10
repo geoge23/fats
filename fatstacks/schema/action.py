@@ -1,6 +1,8 @@
 from typing import Any, List, Optional, Type
-from pydantic import BaseModel, Field
+from pydantic import Field
 from enum import Enum
+
+from fatstacks.utils.model import Model
 
 
 class ActionBehaviorType(str, Enum):
@@ -14,14 +16,14 @@ ActionBehaviorTypes = Type[
 ]
 
 
-class ActionBehavior(BaseModel):
+class ActionBehavior(Model):
     """Defines the behavior of an action when it is triggered."""
 
     type: ActionBehaviorType
     """The type of behavior the action performs (e.g., navigate, request, form)."""
 
 
-class ParamFromData(BaseModel):
+class ParamFromData(Model):
     """Indicates that a parameter's value should be taken from the action's data."""
 
     fromData: str
@@ -31,7 +33,7 @@ class ParamFromData(BaseModel):
 class NavigateActionBehavior(ActionBehavior):
     """Defines a navigation action behavior that transitions to a specified surface."""
 
-    type = ActionBehaviorType.NAVIGATE
+    type: ActionBehaviorType = ActionBehaviorType.NAVIGATE
 
     targetUri: str = Field(pattern=r"^(surface://|https?://).+")
     """The uri to navigate to when the action is triggered. Can use surface:// scheme to refer to internal surfaces."""
@@ -43,7 +45,7 @@ class NavigateActionBehavior(ActionBehavior):
 class RequestActionBehavior(ActionBehavior):
     """Defines a request action behavior that performs an HTTP request to a specified endpoint."""
 
-    type = ActionBehaviorType.REQUEST
+    type: ActionBehaviorType = ActionBehaviorType.REQUEST
 
     endpoint: str
     """The HTTP endpoint to send the request to when the action is triggered."""
@@ -58,13 +60,13 @@ class RequestActionBehavior(ActionBehavior):
 class ToastActionBehavior(ActionBehavior):
     """Defines a toast action behavior that displays a brief message to the user."""
 
-    type = ActionBehaviorType.TOAST
+    type: ActionBehaviorType = ActionBehaviorType.TOAST
 
     message: str
     """The message to display in the toast notification when the action is triggered."""
 
 
-class Action(BaseModel):
+class Action(Model):
     """An action represents an operation that can be performed within the application, such as navigating to a different surface, submitting a form, or triggering a specific functionality."""
 
     id: str

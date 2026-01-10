@@ -1,6 +1,7 @@
 from typing import Optional, Type
-from pydantic import BaseModel
 from enum import Enum
+
+from fatstacks.utils.model import Model
 
 
 class InputFieldType(str, Enum):
@@ -12,7 +13,7 @@ class InputFieldType(str, Enum):
 InputFieldTypes = Type["TextInputField | NumberInputField | SelectInputField"]
 
 
-class InputField(BaseModel):
+class InputField(Model):
     type: InputFieldType
     """The type of input field (e.g., text, number, select)."""
     name: str
@@ -20,25 +21,25 @@ class InputField(BaseModel):
 
 
 class TextInputField(InputField):
-    type = InputFieldType.TEXT
+    type: InputFieldType = InputFieldType.TEXT
     """A text input field."""
     placeholder: Optional[str] = None
     """An optional placeholder text for the input field."""
 
 
 class NumberInputField(InputField):
-    type = InputFieldType.NUMBER
+    type: InputFieldType = InputFieldType.NUMBER
     """A number input field."""
 
 
 class SelectInputField(InputField):
-    type = InputFieldType.SELECT
+    type: InputFieldType = InputFieldType.SELECT
     """A select input field."""
     options: list[str]
     """A list of options available for selection."""
 
 
-class Form(BaseModel):
+class Form(Model):
     """
     A form represents a collection of input fields and actions that allow users to submit data or perform operations within a surface.
     """

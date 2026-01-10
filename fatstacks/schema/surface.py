@@ -1,12 +1,12 @@
 from typing import Optional, List
-from pydantic import BaseModel
 
 from fatstacks.schema.form import Form
 from fatstacks.schema.item import Item
 from fatstacks.schema.layout_hints import LayoutHints
+from fatstacks.utils.model import Model
 
 
-class SurfaceSchema(BaseModel):
+class Surface(Model):
     """
     A surface is the top-level container for an application UI screen. An app may have many surfaces to expose different capabilities to the user.
 
