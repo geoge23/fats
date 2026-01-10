@@ -29,7 +29,7 @@ async def startup():
     start_scheduler()
 
 
-@app.post("/tar-upload")
+@app.post("/mgmt/tar-upload")
 async def handle_tar_upload():
     # stream store the tar to a file
     log("Receiving tar upload...")
@@ -66,12 +66,16 @@ async def handle_tar_upload():
     return "Upload received", 200
 
 
-@app.post("/secret/<secret_name>")
+@app.post("/mgmt/secret/<secret_name>")
 async def handle_secret(secret_name: str):
     secret_data = await request.get_data()
     if not secret_data:
         return "Invalid secret value", 400
-    secret_value = secret_data.decode() if isinstance(secret_data, bytes) else secret_data
+    secret_value = (
+        secret_data.decode()
+        if isinstance(secret_data, bytes | bytearray)
+        else str(secret_data)
+    )
     await upsert_secret(secret_name, secret_value)
     return "Secret uploaded", 200
 
