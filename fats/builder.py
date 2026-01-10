@@ -8,6 +8,7 @@
 
 from pathlib import Path
 import tempfile
+from typing import List
 from aiofiles import os
 import aiofiles
 import httpx
@@ -100,6 +101,13 @@ def parse_options_or_else(dir: Path) -> ProjectConfig:
             options.name = config["fats"]["name"]
         if "version" in config["fats"]:
             options.version = config["fats"]["version"]
+        if "desired_secrets" in config["fats"]:
+            secrets_list = [
+                s.strip()
+                for s in config["fats"]["desired_secrets"].split(",")
+                if s.strip()
+            ]
+            options.desired_secrets = secrets_list
         # if "fats.service_requests" in config:
         #     # get all service requests
         #     service_requests = ServiceRequests()
@@ -117,13 +125,15 @@ def parse_options_or_else(dir: Path) -> ProjectConfig:
         #     options.service_requests = service_requests
     return options
 
-def _determine_correct_buildx_command() -> str:
+
+def _determine_correct_buildx_command() -> List[str]:
     # In railpack with aqua:docker/buildx, the buildx binary is called docker-cli-plugin-docker-buildx
     docker_buildx_path = shutil.which("docker-cli-plugin-docker-buildx")
     if docker_buildx_path:
         return [docker_buildx_path]
     # Fallback to just 'docker buildx'
     return ["docker", "buildx"]
+
 
 async def build_railpack_from_tarball(tar_path: Path) -> ProjectConfig:
     temp_dir = Path(tempfile.mkdtemp())

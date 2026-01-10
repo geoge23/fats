@@ -9,6 +9,8 @@ from quart import Quart, request
 import aiofiles
 from sqlalchemy.exc import IntegrityError
 
+from fats.secrets import upsert_secret
+
 from .scheduler import request_early_schedule_execution, start_scheduler
 from .utils.sqlite import create_tables
 
@@ -62,6 +64,16 @@ async def handle_tar_upload():
     request_early_schedule_execution(create_containers_schedule)
 
     return "Upload received", 200
+
+
+@app.post("/secret/<secret_name>")
+async def handle_secret(secret_name: str):
+    secret_data = await request.get_data()
+    if not secret_data:
+        return "Invalid secret value", 400
+    secret_value = secret_data.decode() if isinstance(secret_data, bytes) else secret_data
+    await upsert_secret(secret_name, secret_value)
+    return "Secret uploaded", 200
 
 
 app.register_blueprint(proxy_blueprint, url_prefix="/app")

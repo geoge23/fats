@@ -1,4 +1,5 @@
 from pathlib import Path
+from sqlalchemy import JSON
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass
 
@@ -14,8 +15,11 @@ _sqlite_uri = "sqlite+aiosqlite:///" + str(_sqlite_path)
 async_engine = create_async_engine(_sqlite_uri, echo=False)
 log(f"SQLite database path: {_sqlite_uri}")
 
+json_str_list = list[str]
+
 
 class Base(MappedAsDataclass, DeclarativeBase):
+    type_annotation_map = {json_str_list: JSON}
     pass
 
 
@@ -23,6 +27,7 @@ AsyncSessionLocal = async_sessionmaker(
     bind=async_engine,
     expire_on_commit=False,
 )
+
 
 async def create_tables():
     async with async_engine.begin() as conn:

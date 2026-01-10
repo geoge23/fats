@@ -12,6 +12,7 @@ from fats.network import create_or_get_fats_network
 from fats.models.project_config import ProjectConfig
 from fats.models.service_entry import ServiceEntry
 from fats.models.service_number import get_service_number
+from fats.secrets import get_secret
 from fats.utils import AsyncSessionLocal, log, run
 
 
@@ -83,10 +84,27 @@ async def create_container_for_app(
     # generate a random userspace port
     port = randint(20000, 60000)
 
-    name_version_sanitized = re.sub(r'[^a-zA-Z0-9-]+', '', app.name + app.version)
+    name_version_sanitized = re.sub(r"[^a-zA-Z0-9-]+", "", app.name + app.version)
     salt = randint(1000, 9999)
 
     container_name = f"fats-{name_version_sanitized}-{salt}"
+
+    # if requesting secrets, resolve them
+    secret_env_args: list[str] = []
+    if app.desired_secrets and len(app.desired_secrets) > 0:
+        secrets: dict[str, Task[str | None]] = {}
+        async with TaskGroup() as tg:
+            for secret_name in app.desired_secrets:
+                secrets[secret_name] = tg.create_task(get_secret(secret_name))
+
+        for secret_name, secret_task in secrets.items():
+            secret_value = secret_task.result()
+            if secret_value is None:
+                log(
+                    f"Warning: Secret '{secret_name}' requested by app '{app.name}:{app.version}' but not found."
+                )
+                continue
+            secret_env_args.extend(["-e", f"{secret_name}={secret_value}"])
 
     proc = await run(
         "docker",
@@ -102,6 +120,7 @@ async def create_container_for_app(
         f"FATS_PROJECT_CONFIG_ID={app.id}",
         "-e",
         f"PORT={port}",
+        *secret_env_args,
         f"{app.name}:{app.version}",
     )
 
